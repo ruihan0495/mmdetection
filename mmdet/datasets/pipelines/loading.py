@@ -218,12 +218,14 @@ class LoadAnnotations(object):
                  with_mask=False,
                  with_seg=False,
                  poly2mask=True,
+                 OC2mask=False,
                  file_client_args=dict(backend='disk')):
         self.with_bbox = with_bbox
         self.with_label = with_label
         self.with_mask = with_mask
         self.with_seg = with_seg
         self.poly2mask = poly2mask
+        self.OC2mask = OC2mask
         self.file_client_args = file_client_args.copy()
         self.file_client = None
 
@@ -277,7 +279,7 @@ class LoadAnnotations(object):
             # polygon -- a single object might consist of multiple parts
             # we merge all parts into one mask rle code
             rles = maskUtils.frPyObjects(mask_ann, img_h, img_w)
-            rle = maskUtils.merge(rles)
+            rle = maskUtils.merge(rles)                  
         elif isinstance(mask_ann['counts'], list):
             # uncompressed RLE
             rle = maskUtils.frPyObjects(mask_ann, img_h, img_w)
@@ -286,6 +288,17 @@ class LoadAnnotations(object):
             rle = mask_ann
         mask = maskUtils.decode(rle)
         return mask
+
+    def ochuman2mask(self, mask_ann):         
+        # OCHuman segments
+        if len(mask_ann['outer']) > 0:
+            mask = self._poly2mask(mask_ann['outer'], mask_ann['height'], mask_ann['width'])
+            if len(mask_ann['inner']) > 0:
+                mask_inner = self._poly2mask(mask_ann['inner'], mask_ann['height'], mask_ann['width'])
+                mask[mask_inner>0] = 0
+        else:
+            mask = np.zeros((ploys['height'], ploys['width']), dtype=np.uint8)
+        return mask      
 
     def process_polygons(self, polygons):
         """Convert polygons to list of ndarray and filter invalid polygons.
@@ -321,6 +334,9 @@ class LoadAnnotations(object):
         if self.poly2mask:
             gt_masks = BitmapMasks(
                 [self._poly2mask(mask, h, w) for mask in gt_masks], h, w)
+        elif self.OC2mask:
+            gt_masks = BitmapMasks(
+                [self.ochuman2mask(mask) for mask in gt_masks], h, w)    
         else:
             gt_masks = PolygonMasks(
                 [self.process_polygons(polygons) for polygons in gt_masks], h,
@@ -381,6 +397,7 @@ class LoadAnnotations(object):
         repr_str += f'with_seg={self.with_seg})'
         repr_str += f'poly2mask={self.poly2mask})'
         repr_str += f'poly2mask={self.file_client_args})'
+        repr_str == f'OC2mask={self.OC2mask}'
         return repr_str
 
 
