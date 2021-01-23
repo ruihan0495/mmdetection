@@ -11,6 +11,7 @@ dataset_type = 'OCHumanDataset'
 classes = ('person',)
 data = dict(
     val=dict(
+        type='OCHumanDataset',
         img_prefix='OCHuman/images/',
         ann_file='OCHuman/ochuman_coco_format_val.json',
         pipeline=[
@@ -33,6 +34,7 @@ data = dict(
                 ])
         ]),
     test=dict(
+        type='OCHumanDataset',
         img_prefix='OCHuman/images/',
         ann_file='OCHuman/ochuman_coco_format_test.json'),
         pipeline=[
