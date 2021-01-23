@@ -481,3 +481,4 @@ def test(model, img_root, anno_file, dataset, logger=print):
         _str += '%.3f '%value
     logger(_str)
     
+    
