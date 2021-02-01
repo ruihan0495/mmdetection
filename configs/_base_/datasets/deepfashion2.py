@@ -1,6 +1,9 @@
 # dataset settings
 dataset_type = 'DeepFashion2Dataset'
-data_root = 'data/small_data/'
+classes = ('short sleeve top', 'long sleeve top', 'short sleeve outwear', 'long sleeve outwear', 'vest',
+            'sling', 'shorts', 'trousers', 'skirt', 'short sleeve dress', 'long sleeve dress', 'vest dress',
+            'sling dress')
+data_root = 'data/DeepFashion2/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
@@ -33,23 +36,20 @@ data = dict(
     workers_per_gpu=1,
     train=dict(
         type=dataset_type,
-        ann_file=data_root + 'anno/deepfashion2.json',
-        img_prefix=data_root + 'image/',
+        ann_file='deepfashion2.json',
+        img_prefix='image/',
         pipeline=train_pipeline,
-        data_root=data_root))
-    """    
+        data_root=data_root),
     val=dict(
         type=dataset_type,
-        ann_file=data_root + 'annotations/DeepFashion_segmentation_query.json',
-        img_prefix=data_root + 'Img/',
+        ann_file=data_root + 'deepfashion2.json',
+        img_prefix=data_root + 'image/',
         pipeline=test_pipeline,
         data_root=data_root),
     test=dict(
         type=dataset_type,
-        ann_file=data_root +
-        'annotations/DeepFashion_segmentation_gallery.json',
-        img_prefix=data_root + 'Img/',
+        ann_file=data_root + 'deepfashion2.json',
+        img_prefix=data_root + 'image/',
         pipeline=test_pipeline,
-        data_root=data_root)"""
+        data_root=data_root))
 evaluation = dict(interval=5, metric=['bbox', 'segm'])
-load_from = '.../checkpoints/mask_rcnn_r50_fpn_1x_coco.pth'
