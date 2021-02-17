@@ -7,15 +7,32 @@ import numpy as np
 import shutil
 import math
 
+train_image_dir = 'data/DeepFashion2/train/image'
+train_anno_dir = 'data/DeepFashion2/train/annos'
+train_save_image_dir = 'data/DeepFashion2/sample_train/image'
+train_save_anno_dir = 'data/DeepFashion2/sample_train/annos'
+
+val_image_dir = 'data/DeepFashion2/deep_val/validation/image'
+val_anno_dir = 'data/DeepFashion2/deep_val/validation/annos'
+val_save_image_dir = 'data/DeepFashion2/sample_val/image'
+val_save_anno_dir = 'data/DeepFashion2/sample_val/annos'
+
+
 def sampler(image_dir, anno_dir, ratio, save_img_dir, save_anno_dir):
     image_files = os.listdir(image_dir)
     anno_files = os.listdir(anno_dir)
     total_files = len(image_files)
     assert len(image_files) == len(anno_files), "Annotations and images don't match!"
     sample_num_files = math.ceil(ratio * len(image_files))
-    sampled_file_index = np.random.choice(total_files, sample_num_files)
-    sampled_image_files = np.array(image_files)[sampled_file_index]
-    sampled_anno_files = np.array(anno_files)[sampled_file_index]
+
+    sampled_image_files = np.random.choice(image_files, sample_num_files)
+    sampled_image_prefix = [sampled_image_file.split('.')[0] for sampled_image_file in sampled_image_files]
+    sampled_anno_files = [image_prefix + '.json' for image_prefix in sampled_image_prefix]
+
+    '''annotation file and image file name don't match exactly in this way...'''
+    #sampled_file_index = np.random.choice(total_files, sample_num_files)
+    #sampled_image_files = np.array(image_files)[sampled_file_index]
+    #sampled_anno_files = np.array(anno_files)[sampled_file_index]
     assert len(sampled_anno_files) == len(sampled_image_files), "Sampled images and annotations have different lengths"
 
     if not os.path.exists(save_img_dir):
