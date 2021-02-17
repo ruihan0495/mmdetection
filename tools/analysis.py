@@ -3,9 +3,8 @@ import os
 import json
 import numpy as np
 from mmdet.datasets import build_dataset
-from mmdet.models import build_detector
-from mmdet.apis import train_detector, inference_detector
-from mmcv.runner import load_checkpoint
+from mmdet.apis import inference_detector, init_detector
+
 from mmcv import Config
 from mmdet.core.evaluation import eval_map
 
@@ -31,9 +30,9 @@ def ap_for_image(cfg, checkpoint, image_dir, anno_dir, out_dir):
     model = init_detector(cfg, checkpoint, device='cuda:0')
     images = os.listdir(image_dir)
     anno_files = os.listdir(anno_dir)
-    output_name = 'precision.txt'
+    output_name = 'precision.json'
     if not os.path.exists(out_dir):
-        os.path.makedirs(out_dir)
+        os.makedirs(out_dir)
     output_name = os.path.join(out_dir, output_name)
     for image, anno in zip(images, anno_files):
         assert image.split('.')[0] == anno.split('.')[0], "image and annotation mismatch!"
@@ -43,7 +42,7 @@ def ap_for_image(cfg, checkpoint, image_dir, anno_dir, out_dir):
         annotations = json_to_annotation(json_name)
         mean_ap, _ = eval_map(results[0], annotations)
         with open(output_name, 'w') as f:
-            json.dump(mean_ap, f)
+            json.dump([annotations['image_id'], mean_ap], f)
 
 
 if __name__ == "__main__":
