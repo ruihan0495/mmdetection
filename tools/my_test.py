@@ -1,7 +1,7 @@
 import argparse
 import os
 import warnings
-
+import json
 import mmcv
 import torch
 from mmcv import Config, DictAction
@@ -22,6 +22,7 @@ def parse_args():
         description='MMDet test (and eval) a model')
     parser.add_argument('config', help='test config file path')
     parser.add_argument('checkpoint', help='checkpoint file')
+    parser.add_argument('ann', help='json annotation file')
     parser.add_argument('--out', help='output result file in pickle format')
     parser.add_argument('--out_prefix', help='output result file in json format')
     parser.add_argument(
@@ -112,9 +113,6 @@ def main():
     if args.eval and args.format_only:
         raise ValueError('--eval and --format_only cannot be both specified')
 
-    if args.out is not None and not args.out.endswith(('.pkl', '.pickle')):
-        raise ValueError('The output file must be a pkl file.')
-
     cfg = Config.fromfile(args.config)
     if args.cfg_options is not None:
         cfg.merge_from_dict(args.cfg_options)
@@ -184,8 +182,12 @@ def main():
         outputs = single_gpu_test(model, data_loader, args.show, args.show_dir,
                                   args.show_score_thr)
         result_files = dataset.results2json(outputs, args.out_prefix)
-        for res_file in result_files:
-            analyze_results(res_file, args.config, args.eval, args.out)
+        print(result_files)
+        for metric in result_files:
+            #print("here")
+            #print(res_file)
+            #cocoDt = cocoGt.loadRes(result_files[metric])
+            analyze_results(result_files[metric], args.ann, args.eval, args.out)
     else:
         model = MMDistributedDataParallel(
             model.cuda(),
@@ -195,7 +197,7 @@ def main():
                                  args.gpu_collect)
         result_files = dataset.results2json(outputs, args.out_prefix)
         for res_file in result_files:
-            analyze_results(res_file, args.config, args.eval, args.out)
+            analyze_results(res_file, args.ann, args.eval, args.out)
 
 if __name__ == '__main__':
     main()
