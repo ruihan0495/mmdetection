@@ -3,7 +3,8 @@ _base_ = [
     '../_base_/datasets/coco_detection.py',
     '../_base_/schedules/schedule_1x.py', '../_base_/default_runtime.py'
 ]
-roi_head=dict(
+model=dict(
+    roi_head=dict(
         type='CascadeRoIHead',
         num_stages=3,
         stage_loss_weights=[1, 0.5, 0.25],
@@ -76,7 +77,7 @@ roi_head=dict(
             conv_out_channels=256,
             num_classes=13,
             loss_mask=dict(
-                type='CrossEntropyLoss', use_mask=True, loss_weight=1.0))),
+                type='CrossEntropyLoss', use_mask=True, loss_weight=1.0))))
 # runtime settings
 total_epochs = 5
 

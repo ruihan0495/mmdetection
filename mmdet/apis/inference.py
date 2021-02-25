@@ -196,4 +196,5 @@ def show_result_pyplot(model,
         fig_size=fig_size,
         win_name=title,
         bbox_color=(72, 101, 241),
-        text_color=(72, 101, 241))
+        text_color=(72, 101, 241),
+        out_file="figures/"+img)
