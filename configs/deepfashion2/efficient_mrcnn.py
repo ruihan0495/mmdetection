@@ -302,5 +302,5 @@ data = dict(
         ann_file='deepfashion2.json',
         img_prefix='image/',
         data_root=data_root))
-total_epochs = 2
+total_epochs = 26
 evaluation = dict(interval=5, metric=['bbox', 'segm'])

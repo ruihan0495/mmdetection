@@ -12,6 +12,8 @@ from mmdet.datasets import (build_dataloader, build_dataset,
                             replace_ImageToTensor)
 from mmdet.utils import get_root_logger
 
+# Note: when train other models, please set find_unused_parameters to False
+# find_unused_parameters is True only when train EfficientNet backbone
 
 def set_random_seed(seed, deterministic=False):
     """Set random seed.

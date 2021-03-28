@@ -705,7 +705,6 @@ class LoadAnnotationsCP(object):
                 [self._poly2mask(mask, h, w) for mask in gt_masks], h, w)
             gt_masks = BitmapMasks(
                 [self._poly2mask(mask, h, w) for mask in paste_masks], ph, pw)
-            )
         elif self.OC2mask:
             gt_masks = BitmapMasks(
                 [self.ochuman2mask(mask) for mask in gt_masks], h, w)    

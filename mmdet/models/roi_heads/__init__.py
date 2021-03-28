@@ -15,8 +15,6 @@ from .roi_extractors import SingleRoIExtractor
 from .shared_heads import ResLayer
 from .standard_roi_head import StandardRoIHead
 from .trident_roi_head import TridentRoIHead
-from .solo_v2_head import SOLOv2Head
-from .solo_v2_light import SOLOv2LightHead
 
 __all__ = [
     'BaseRoIHead', 'CascadeRoIHead', 'DoubleHeadRoIHead', 'MaskScoringRoIHead',
@@ -25,6 +23,5 @@ __all__ = [
     'Shared4Conv1FCBBoxHead', 'DoubleConvFCBBoxHead', 'FCNMaskHead',
     'HTCMaskHead', 'FusedSemanticHead', 'GridHead', 'MaskIoUHead',
     'SingleRoIExtractor', 'PISARoIHead', 'PointRendRoIHead', 'MaskPointHead',
-    'CoarseMaskHead', 'DynamicRoIHead', 'TridentRoIHead', 'SOLOv2Head',
-    'SOLOv2LightHead'
+    'CoarseMaskHead', 'DynamicRoIHead', 'TridentRoIHead'
 ]

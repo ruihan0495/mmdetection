@@ -12,7 +12,6 @@ from .test_time_aug import MultiScaleFlipAug
 from .transforms import (Albu, CutOut, Expand, MinIoURandomCrop, Normalize,
                          Pad, PhotoMetricDistortion, RandomCenterCropPad,
                          RandomCrop, RandomFlip, Resize, SegRescale)
-from .copy_paste import AlbuCopyPaste
 
 __all__ = [
     'Compose', 'to_tensor', 'ToTensor', 'ImageToTensor', 'ToDataContainer',
@@ -23,6 +22,5 @@ __all__ = [
     'MinIoURandomCrop', 'Expand', 'PhotoMetricDistortion', 'Albu',
     'InstaBoost', 'RandomCenterCropPad', 'AutoAugment', 'CutOut', 'Shear',
     'Rotate', 'ColorTransform', 'EqualizeTransform', 'BrightnessTransform',
-    'ContrastTransform', 'Translate', 'AlbuCopyPaste', 'LoadAnnotationsCP',
-    'LoadImageFromFileCP'
+    'ContrastTransform', 'Translate'
 ]
