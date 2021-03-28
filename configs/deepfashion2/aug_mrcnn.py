@@ -1,4 +1,5 @@
 _base_ = '../mask_rcnn/mask_rcnn_r50_fpn_2x_coco.py'
+
 model = dict(pretrained='torchvision://resnet101', 
             backbone=dict(depth=101),
             roi_head=dict(
@@ -38,7 +39,7 @@ model = dict(pretrained='torchvision://resnet101',
 total_epochs = 2
 
 # dataset settings
-dataset_type = 'DeepFashion2Dataset'
+dataset_type = 'DeepFashion2DatasetCP'
 data_root = 'data/DeepFashion2/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
@@ -82,35 +83,26 @@ albu_train_transforms = [
             dict(type='MedianBlur', blur_limit=3, p=1.0)
         ],
         p=0.1),
-    dict(
-        type='CopyPaste',
-        blend=True, 
-        sigma=1, 
-        pct_objects_paste=0.5, 
-        p=1
-    ),
+    dict(type='CopyPaste',
+        blend=True,
+        sigma=1,
+        pct_objects_paste=0.5,
+        p=1)
 ]
 train_pipeline = [
-    dict(type='LoadImageFromFile'),
-    dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
+    dict(type='LoadImageFromFileCP'),
+    dict(type='LoadAnnotationsCP', with_bbox=True, with_mask=True),
     dict(type='Resize', img_scale=(1333, 800), keep_ratio=True),
-    dict(type='Pad', size_divisor=32),
     dict(
         type='Albu',
         transforms=albu_train_transforms,
         bbox_params=dict(
             type='BboxParams',
-            format='pascal_voc',
-            label_fields=['gt_labels'],
-            min_visibility=0.0,
-            filter_lost_elements=True),
-        keymap={
-            'img': 'paste_image',
-            'gt_masks': 'paste_masks',
-            'gt_bboxes': 'paste_bboxes',
-        },
+            format='coco',
+            min_visibility=0.0),
         update_pad_shape=False,
-        skip_img_without_anno=True),
+        skip_img_without_anno=True), 
+    dict(type='Pad', size_divisor=32),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='DefaultFormatBundle'),
     dict(
@@ -118,17 +110,6 @@ train_pipeline = [
         keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks'],
         meta_keys=('filename', 'ori_shape', 'img_shape', 'img_norm_cfg',
                    'pad_shape', 'scale_factor'))
-]
- 
-train_pipeline = [
-    dict(type='LoadImageFromFile'),
-    dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
-    dict(type='Resize', img_scale=(750, 1101), keep_ratio=True),
-    dict(type='RandomFlip', flip_ratio=0.5),
-    dict(type='Normalize', **img_norm_cfg),
-    dict(type='Pad', size_divisor=32),
-    dict(type='DefaultFormatBundle'),
-    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks']),
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile'),
@@ -150,20 +131,20 @@ data = dict(
     workers_per_gpu=1,
     train=dict(
         type=dataset_type,
-        ann_file='deepfashion2.json',
-        img_prefix='image/',
+        ann_file='sample_train/deepfashion2.json',
+        img_prefix='sample_train/image/',
         pipeline=train_pipeline,
         data_root=data_root),
     val=dict(
         type=dataset_type,
-        ann_file='deepfashion2.json',
-        img_prefix='image/',
+        ann_file='sample_val/deepfashion2.json',
+        img_prefix='sample_val/image/',
         pipeline=test_pipeline,
         data_root=data_root),
     test=dict(
         type=dataset_type,
         ann_file='deepfashion2.json',
-        img_prefix='image/',
+        img_prefix='sample_val/image/',
         pipeline=test_pipeline,
         data_root=data_root))
 evaluation = dict(interval=5, metric=['bbox', 'segm'])

@@ -1,6 +1,7 @@
 import argparse
 import os
 import json
+import pickle
 import numpy as np
 from mmdet.datasets import build_dataset
 from mmdet.apis import inference_detector, init_detector
@@ -8,7 +9,7 @@ from mmdet.apis import inference_detector, init_detector
 from mmcv import Config
 from mmdet.core.evaluation import eval_map
 
-
+# Implementation based on eval_map
 def json_to_annotation(json_name):    
     annotation = {}
     bboxes = []
@@ -45,14 +46,16 @@ def ap_for_image(cfg, checkpoint, image_dir, anno_dir, out_dir):
             json.dump([annotations['image_id'], mean_ap], f)
 
 
-if __name__ == "__main__":
-    image_dir = ""
-    anno_dir = ""
-    out_dir = ""
-    config = ""
-    checkpoint = ""
 
-    ap_for_image(config, checkpoint, image_dir, anno_dir, out_dir)
+
+if __name__ == "__main__":
+    image_dir = "../data/DeepFashion2/sample_val/image"
+    anno_dir = "../data/DeepFashion2/sample_val/annos"
+    out_dir = "../data/DeepFashion2/detecoRS"
+    config = "../configs/deepfashion2/detecoRS.py"
+    checkpoint = "../work_dirs/detectoRS/epoch_2.pth"
+
+    #ap_for_image(config, checkpoint, image_dir, anno_dir, out_dir)
 
     
 

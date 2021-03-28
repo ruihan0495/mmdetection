@@ -37,3 +37,4 @@ def unmap(data, count, inds, fill=0):
         ret = data.new_full(new_size, fill)
         ret[inds.type(torch.bool), :] = data
     return ret
+

@@ -24,7 +24,6 @@ except ImportError:
 @PIPELINES.register_module()
 class Resize(object):
     """Resize images & bbox & mask.
-
     This transform resizes the input image to some scale. Bboxes and masks are
     then resized with the same scale factor. If the input dict contains the key
     "scale", then the scale in the input dict is used, otherwise the specified
@@ -32,17 +31,14 @@ class Resize(object):
     "scale_factor" (if MultiScaleFlipAug does not give img_scale but
     scale_factor), the actual scale will be computed by image shape and
     scale_factor.
-
     `img_scale` can either be a tuple (single-scale) or a list of tuple
     (multi-scale). There are 3 multiscale modes:
-
     - ``ratio_range is not None``: randomly sample a ratio from the ratio \
       range and multiply it with the image scale.
     - ``ratio_range is None`` and ``multiscale_mode == "range"``: randomly \
       sample a scale from the multiscale range.
     - ``ratio_range is None`` and ``multiscale_mode == "value"``: randomly \
       sample a scale from multiple scales.
-
     Args:
         img_scale (tuple or list[tuple]): Images scales for resizing.
         multiscale_mode (str): Either "range" or "value".
@@ -97,10 +93,8 @@ class Resize(object):
     @staticmethod
     def random_select(img_scales):
         """Randomly select an img_scale from given candidates.
-
         Args:
             img_scales (list[tuple]): Images scales for selection.
-
         Returns:
             (tuple, int): Returns a tuple ``(img_scale, scale_dix)``, \
                 where ``img_scale`` is the selected image scale and \
@@ -115,12 +109,10 @@ class Resize(object):
     @staticmethod
     def random_sample(img_scales):
         """Randomly sample an img_scale when ``multiscale_mode=='range'``.
-
         Args:
             img_scales (list[tuple]): Images scale range for sampling.
                 There must be two tuples in img_scales, which specify the lower
                 and uper bound of image scales.
-
         Returns:
             (tuple, None): Returns a tuple ``(img_scale, None)``, where \
                 ``img_scale`` is sampled scale and None is just a placeholder \
@@ -142,16 +134,13 @@ class Resize(object):
     @staticmethod
     def random_sample_ratio(img_scale, ratio_range):
         """Randomly sample an img_scale when ``ratio_range`` is specified.
-
         A ratio will be randomly sampled from the range specified by
         ``ratio_range``. Then it would be multiplied with ``img_scale`` to
         generate sampled scale.
-
         Args:
             img_scale (tuple): Images scale base to multiply with ratio.
             ratio_range (tuple[float]): The minimum and maximum ratio to scale
                 the ``img_scale``.
-
         Returns:
             (tuple, None): Returns a tuple ``(scale, None)``, where \
                 ``scale`` is sampled ratio multiplied with ``img_scale`` and \
@@ -169,16 +158,13 @@ class Resize(object):
     def _random_scale(self, results):
         """Randomly sample an img_scale according to ``ratio_range`` and
         ``multiscale_mode``.
-
         If ``ratio_range`` is specified, a ratio will be sampled and be
         multiplied with ``img_scale``.
         If multiple scales are specified by ``img_scale``, a scale will be
         sampled according to ``multiscale_mode``.
         Otherwise, single scale will be used.
-
         Args:
             results (dict): Result dict from :obj:`dataset`.
-
         Returns:
             dict: Two new keys 'scale` and 'scale_idx` are added into \
                 ``results``, which would be used by subsequent pipelines.
@@ -233,11 +219,11 @@ class Resize(object):
     def _resize_bboxes(self, results):
         """Resize bounding boxes with ``results['scale_factor']``."""
         for key in results.get('bbox_fields', []):
-            bboxes = results[key] * results['scale_factor']
+            bboxes = results[key][:,:4] * results['scale_factor']
             if self.bbox_clip_border:
                 img_shape = results['img_shape']
-                bboxes[:, 0::2] = np.clip(bboxes[:, 0::2], 0, img_shape[1])
-                bboxes[:, 1::2] = np.clip(bboxes[:, 1::2], 0, img_shape[0])
+                bboxes[:, 0:3:2] = np.clip(bboxes[:, 0:3:2], 0, img_shape[1])
+                bboxes[:, 1:4:2] = np.clip(bboxes[:, 1:4:2], 0, img_shape[0])
             results[key] = bboxes
 
     def _resize_masks(self, results):
@@ -270,10 +256,8 @@ class Resize(object):
     def __call__(self, results):
         """Call function to resize images, bounding boxes, masks, semantic
         segmentation map.
-
         Args:
             results (dict): Result dict from loading pipeline.
-
         Returns:
             dict: Resized results, 'img_shape', 'pad_shape', 'scale_factor', \
                 'keep_ratio' keys are added into result dict.
@@ -317,14 +301,11 @@ class Resize(object):
 @PIPELINES.register_module()
 class RandomFlip(object):
     """Flip the image & bbox & mask.
-
     If the input dict contains the key "flip", then the flag will be used,
     otherwise it will be randomly decided by a ratio specified in the init
     method.
-
     When random flip is enabled, ``flip_ratio``/``direction`` can either be a
     float/string or tuple of float/string. There are 3 flip modes:
-
     - ``flip_ratio`` is float, ``direction`` is string: the image will be
         ``direction``ly flipped with probability of ``flip_ratio`` .
         E.g., ``flip_ratio=0.5``, ``direction='horizontal'``,
@@ -341,7 +322,6 @@ class RandomFlip(object):
         E.g., ``flip_ratio=[0.3, 0.5]``, ``direction=['horizontal',
         'vertical']``, then image will be horizontally flipped with probability
          of 0.3, vertically with probability of 0.5
-
     Args:
         flip_ratio (float | list[float], optional): The flipping probability.
             Default: None.
@@ -380,13 +360,11 @@ class RandomFlip(object):
 
     def bbox_flip(self, bboxes, img_shape, direction):
         """Flip bboxes horizontally.
-
         Args:
             bboxes (numpy.ndarray): Bounding boxes, shape (..., 4*k)
             img_shape (tuple[int]): Image shape (height, width)
             direction (str): Flip direction. Options are 'horizontal',
                 'vertical'.
-
         Returns:
             numpy.ndarray: Flipped bounding boxes.
         """
@@ -415,10 +393,8 @@ class RandomFlip(object):
     def __call__(self, results):
         """Call function to flip bounding boxes, masks, semantic segmentation
         maps.
-
         Args:
             results (dict): Result dict from loading pipeline.
-
         Returns:
             dict: Flipped results, 'flip', 'flip_direction' keys are added \
                 into result dict.
@@ -474,11 +450,9 @@ class RandomFlip(object):
 @PIPELINES.register_module()
 class Pad(object):
     """Pad the image & mask.
-
     There are two padding modes: (1) pad to a fixed size and (2) pad to the
     minimum size that is divisible by some number.
     Added keys are "pad_shape", "pad_fixed_size", "pad_size_divisor",
-
     Args:
         size (tuple, optional): Fixed padding size.
         size_divisor (int, optional): The divisor of padded size.
@@ -522,10 +496,8 @@ class Pad(object):
 
     def __call__(self, results):
         """Call function to pad images, masks, semantic segmentation maps.
-
         Args:
             results (dict): Result dict from loading pipeline.
-
         Returns:
             dict: Updated result dict.
         """
@@ -545,9 +517,7 @@ class Pad(object):
 @PIPELINES.register_module()
 class Normalize(object):
     """Normalize the image.
-
     Added key is "img_norm_cfg".
-
     Args:
         mean (sequence): Mean values of 3 channels.
         std (sequence): Std values of 3 channels.
@@ -562,10 +532,8 @@ class Normalize(object):
 
     def __call__(self, results):
         """Call function to normalize images.
-
         Args:
             results (dict): Result dict from loading pipeline.
-
         Returns:
             dict: Normalized results, 'img_norm_cfg' key is added into
                 result dict.
@@ -586,10 +554,8 @@ class Normalize(object):
 @PIPELINES.register_module()
 class RandomCrop(object):
     """Random crop the image & bboxes & masks.
-
     The absolute `crop_size` is sampled based on `crop_type` and `image_size`,
     then the cropped results are generated.
-
     Args:
         crop_size (tuple): The relative ratio or absolute pixels of
             height and width.
@@ -606,7 +572,6 @@ class RandomCrop(object):
             not contain any bbox area. Default False.
         bbox_clip_border (bool, optional): Whether clip the objects outside
             the border of the image. Defaults to True.
-
     Note:
         - If the image is smaller than the absolute crop size, return the
             original image.
@@ -650,13 +615,11 @@ class RandomCrop(object):
     def _crop_data(self, results, crop_size, allow_negative_crop):
         """Function to randomly crop images, bounding boxes, masks, semantic
         segmentation maps.
-
         Args:
             results (dict): Result dict from loading pipeline.
             crop_size (tuple): Expected absolute size after cropping, (h, w).
             allow_negative_crop (bool): Whether to allow a crop that does not
                 contain any bbox area. Default to False.
-
         Returns:
             dict: Randomly cropped results, 'img_shape' key in result dict is
                 updated according to crop size.
@@ -715,10 +678,8 @@ class RandomCrop(object):
     def _get_crop_size(self, image_size):
         """Randomly generates the absolute crop size based on `crop_type` and
         `image_size`.
-
         Args:
             image_size (tuple): (h, w).
-
         Returns:
             crop_size (tuple): (crop_h, crop_w) in absolute pixels.
         """
@@ -745,10 +706,8 @@ class RandomCrop(object):
     def __call__(self, results):
         """Call function to randomly crop images, bounding boxes, masks,
         semantic segmentation maps.
-
         Args:
             results (dict): Result dict from loading pipeline.
-
         Returns:
             dict: Randomly cropped results, 'img_shape' key in result dict is
                 updated according to crop size.
@@ -770,7 +729,6 @@ class RandomCrop(object):
 @PIPELINES.register_module()
 class SegRescale(object):
     """Rescale semantic segmentation maps.
-
     Args:
         scale_factor (float): The scale factor of the final output.
         backend (str): Image rescale backend, choices are 'cv2' and 'pillow'.
@@ -784,10 +742,8 @@ class SegRescale(object):
 
     def __call__(self, results):
         """Call function to scale the semantic segmentation map.
-
         Args:
             results (dict): Result dict from loading pipeline.
-
         Returns:
             dict: Result dict with semantic segmentation map scaled.
         """
@@ -810,7 +766,6 @@ class PhotoMetricDistortion(object):
     """Apply photometric distortion to image sequentially, every transformation
     is applied with a probability of 0.5. The position of random contrast is in
     second or second to last.
-
     1. random brightness
     2. random contrast (mode 0)
     3. convert color from BGR to HSV
@@ -819,7 +774,6 @@ class PhotoMetricDistortion(object):
     6. convert color from HSV to BGR
     7. random contrast (mode 1)
     8. randomly swap channels
-
     Args:
         brightness_delta (int): delta of brightness.
         contrast_range (tuple): range of contrast.
@@ -839,10 +793,8 @@ class PhotoMetricDistortion(object):
 
     def __call__(self, results):
         """Call function to perform photometric distortion on images.
-
         Args:
             results (dict): Result dict from loading pipeline.
-
         Returns:
             dict: Result dict with images distorted.
         """
@@ -914,10 +866,8 @@ class PhotoMetricDistortion(object):
 @PIPELINES.register_module()
 class Expand(object):
     """Random expand the image & bboxes.
-
     Randomly place the original image on a canvas of 'ratio' x original image
     size filled with mean values. The ratio is in the range of ratio_range.
-
     Args:
         mean (tuple): mean value of dataset.
         to_rgb (bool): if need to convert the order of mean to align with RGB.
@@ -943,10 +893,8 @@ class Expand(object):
 
     def __call__(self, results):
         """Call function to expand images, bounding boxes.
-
         Args:
             results (dict): Result dict from loading pipeline.
-
         Returns:
             dict: Result dict with images, bounding boxes expanded
         """
@@ -1008,7 +956,6 @@ class MinIoURandomCrop(object):
     """Random crop the image & bboxes, the cropped patches have minimum IoU
     requirement with original image & bboxes, the IoU threshold is randomly
     selected from min_ious.
-
     Args:
         min_ious (tuple): minimum IoU threshold for all intersections with
         bounding boxes
@@ -1016,7 +963,6 @@ class MinIoURandomCrop(object):
         where a >= min_crop_size).
         bbox_clip_border (bool, optional): Whether clip the objects outside
             the border of the image. Defaults to True.
-
     Note:
         The keys for bboxes, labels and masks should be paired. That is, \
         `gt_bboxes` corresponds to `gt_labels` and `gt_masks`, and \
@@ -1044,10 +990,8 @@ class MinIoURandomCrop(object):
     def __call__(self, results):
         """Call function to crop images and bounding boxes with minimum IoU
         constraint.
-
         Args:
             results (dict): Result dict from loading pipeline.
-
         Returns:
             dict: Result dict with images and bounding boxes cropped, \
                 'img_shape' key is updated.
@@ -1146,10 +1090,8 @@ class MinIoURandomCrop(object):
 @PIPELINES.register_module()
 class Corrupt(object):
     """Corruption augmentation.
-
     Corruption transforms implemented based on
     `imagecorruptions <https://github.com/bethgelab/imagecorruptions>`_.
-
     Args:
         corruption (str): Corruption name.
         severity (int, optional): The severity of corruption. Default: 1.
@@ -1161,10 +1103,8 @@ class Corrupt(object):
 
     def __call__(self, results):
         """Call function to corrupt image.
-
         Args:
             results (dict): Result dict from loading pipeline.
-
         Returns:
             dict: Result dict with images corrupted.
         """
@@ -1190,15 +1130,11 @@ class Corrupt(object):
 @PIPELINES.register_module()
 class Albu(object):
     """Albumentation augmentation.
-
     Adds custom transformations from Albumentations library.
     Please, visit `https://albumentations.readthedocs.io`
     to get more information.
-
     An example of ``transforms`` is as followed:
-
     .. code-block::
-
         [
             dict(
                 type='ShiftScaleRotate',
@@ -1221,7 +1157,6 @@ class Albu(object):
                 ],
                 p=0.1),
         ]
-
     Args:
         transforms (list[dict]): A list of albu transformations
         bbox_params (dict): Bbox_params for albumentation `Compose`
@@ -1243,19 +1178,40 @@ class Albu(object):
         self.filter_lost_elements = False
         self.update_pad_shape = update_pad_shape
         self.skip_img_without_anno = skip_img_without_anno
+        self.split_index = None
+        self.paste_additonal_targets = None
+        # Calculate the split index of transforms
+        for i, transform in enumerate(self.transforms):
+            if transform['type'] == 'CopyPaste':
+                self.split_index = i
+        
+        if self.split_index is not None:
+            pre_copy = self.transforms[:self.split_index]
+            copy_paste = self.transforms[self.split_index]
+            post_copy = self.transforms[self.split_index+1:]
 
-        # A simple workaround to remove masks without boxes
-        if (isinstance(bbox_params, dict) and 'label_fields' in bbox_params
-                and 'filter_lost_elements' in bbox_params):
-            self.filter_lost_elements = True
-            self.origin_label_fields = bbox_params['label_fields']
-            bbox_params['label_fields'] = ['idx_mapper']
-            del bbox_params['filter_lost_elements']
+            self.bbox_params = (
+                self.albu_builder(bbox_params) if bbox_params else None)
+            self.pre_copy = Compose([self.albu_builder(t) for t in pre_copy],
+                            bbox_params=self.bbox_params)
+            self.copy_paste = Compose([self.albu_builder(copy_paste)],
+                            bbox_params=self.bbox_params, additional_targets=self.paste_additonal_targets)
+            self.post_copy = Compose([self.albu_builder(t) for t in post_copy],
+                            bbox_params=self.bbox_params)
 
-        self.bbox_params = (
-            self.albu_builder(bbox_params) if bbox_params else None)
-        self.aug = Compose([self.albu_builder(t) for t in self.transforms],
-                           bbox_params=self.bbox_params)
+        else:
+            # A simple workaround to remove masks without boxes
+            if (isinstance(bbox_params, dict) and 'label_fields' in bbox_params
+                    and 'filter_lost_elements' in bbox_params):
+                self.filter_lost_elements = True
+                self.origin_label_fields = bbox_params['label_fields']
+                bbox_params['label_fields'] = ['idx_mapper']
+                del bbox_params['filter_lost_elements']
+
+            self.bbox_params = (
+                self.albu_builder(bbox_params) if bbox_params else None)
+            self.aug = Compose([self.albu_builder(t) for t in self.transforms],
+                            bbox_params=self.bbox_params)
 
         if not keymap:
             self.keymap_to_albu = {
@@ -1278,7 +1234,7 @@ class Albu(object):
         Returns:
             obj: The constructed object.
         """
-
+        class_dict = {'CopyPaste': CopyPaste}
         assert isinstance(cfg, dict) and 'type' in cfg
         args = cfg.copy()
 
@@ -1286,7 +1242,10 @@ class Albu(object):
         if mmcv.is_str(obj_type):
             if albumentations is None:
                 raise RuntimeError('albumentations is not installed')
-            obj_cls = getattr(albumentations, obj_type)
+            if obj_type == 'CopyPaste':
+              obj_cls = class_dict[obj_type]
+            else:
+              obj_cls = getattr(albumentations, obj_type)
         elif inspect.isclass(obj_type):
             obj_cls = obj_type
         else:
@@ -1304,7 +1263,6 @@ class Albu(object):
     @staticmethod
     def mapper(d, keymap):
         """Dictionary mapper. Renames keys according to keymap provided.
-
         Args:
             d (dict): old dict
             keymap (dict): {'old_key':'new_key'}
@@ -1319,34 +1277,91 @@ class Albu(object):
         return updated_dict
 
     def __call__(self, results):
-        # dict to albumentations format
-        results = self.mapper(results, self.keymap_to_albu)
-        # TODO: add bbox_fields
-        if 'bboxes' in results:
-            # to list of boxes
-            if isinstance(results['bboxes'], np.ndarray):
-                results['bboxes'] = [x for x in results['bboxes']]
-            # add pseudo-field for filtration
-            if self.filter_lost_elements:
-                results['idx_mapper'] = np.arange(len(results['bboxes']))
+        if ('paste_image' in results) and ('paste_masks' in results) and ('paste_bboxes' in results):
+            img_data = dict()
+            img_data['image'] = results['img']
+            img_data['masks'] = results['gt_masks']
+            img_data['bboxes'] = results['gt_bboxes']
 
-        # TODO: Support mask structure in albu
-        if 'masks' in results:
-            if isinstance(results['masks'], PolygonMasks):
-                raise NotImplementedError(
-                    'Albu only supports BitMap masks now')
-            ori_masks = results['masks']
-            if albumentations.__version__ < '0.5':
-                results['masks'] = results['masks'].masks
-            else:
-                results['masks'] = [mask for mask in results['masks'].masks]
+            paste_data = dict()
+            paste_data['paste_image'] = results['paste_image']
+            paste_data['paste_masks'] = results['paste_masks']
+            paste_data['paste_bboxes'] = results['paste_bboxes']
 
-        results = self.aug(**results)
+            #img_data = self.mapper(results, self.keymap_to_albu)
+            #paste_data = self.mapper(results, self.keymap_to_albu)
+            if 'bboxes' in img_data:
+                # to list of boxes
+                if isinstance(img_data['bboxes'], np.ndarray):
+                    img_data['bboxes'] = [x for x in img_data['bboxes']]
+                # add pseudo-field for filtration
+                if self.filter_lost_elements:
+                    img_data['idx_mapper'] = np.arange(len(img_data['bboxes']))
+
+            if 'paste_bboxes' in paste_data:
+                # to list of boxes
+                if isinstance(paste_data['paste_bboxes'], np.ndarray):
+                    paste_data['paste_bboxes'] = [x for x in paste_data['paste_bboxes']]
+                # add pseudo-field for filtration
+                if self.filter_lost_elements:
+                    paste_data['idx_mapper'] = np.arange(len(paste_data['paste_bboxes']))
+
+            # TODO: Support mask structure in albu
+            if 'masks' in img_data:
+                if isinstance(img_data['masks'], PolygonMasks):
+                    raise NotImplementedError(
+                        'Albu only supports BitMap masks now')
+                ori_masks = img_data['masks']
+                if albumentations.__version__ < '0.5':
+                    img_data['masks'] = img_data['masks'].masks
+                else:
+                    img_data['masks'] = [mask for mask in img_data['masks'].masks]    
+
+            if 'paste_masks' in paste_data:
+                if isinstance(paste_data['paste_masks'], PolygonMasks):
+                    raise NotImplementedError(
+                        'Albu only supports BitMap masks now')
+                ori_masks = paste_data['paste_masks']
+                if albumentations.__version__ < '0.5':
+                    paste_data['paste_masks'] = paste_data['paste_masks'].masks
+                else:
+                    paste_data['paste_masks'] = [mask for mask in paste_data['paste_masks'].masks]          
+
+            results = self.pre_copy(**img_data)
+            results = self.copy_paste(**results, **paste_data)
+            results = self.post_copy(**results)
+
+        else: 
+            # dict to albumentations format
+            results = self.mapper(results, self.keymap_to_albu)
+            # TODO: add bbox_fields
+            if 'bboxes' in results:
+                # to list of boxes
+                if isinstance(results['bboxes'], np.ndarray):
+                    results['bboxes'] = [x for x in results['bboxes']]
+                # add pseudo-field for filtration
+                if self.filter_lost_elements:
+                    results['idx_mapper'] = np.arange(len(results['bboxes']))
+
+            # TODO: Support mask structure in albu
+            if 'masks' in results:
+                if isinstance(results['masks'], PolygonMasks):
+                    raise NotImplementedError(
+                        'Albu only supports BitMap masks now')
+                ori_masks = results['masks']
+                if albumentations.__version__ < '0.5':
+                    results['masks'] = results['masks'].masks
+                else:
+                    results['masks'] = [mask for mask in results['masks'].masks]            
+
+            results = self.aug(**results)
 
         if 'bboxes' in results:
             if isinstance(results['bboxes'], list):
                 results['bboxes'] = np.array(
                     results['bboxes'], dtype=np.float32)
+                results['bboxes'] = results['bboxes'][:,:4]
+            results['bboxes'] = results['bboxes'][:,:4]
             results['bboxes'] = results['bboxes'].reshape(-1, 4)
 
             # filter label_fields
@@ -1388,20 +1403,15 @@ class Albu(object):
 @PIPELINES.register_module()
 class RandomCenterCropPad(object):
     """Random center crop and random around padding for CornerNet.
-
     This operation generates randomly cropped image from the original image and
     pads it simultaneously. Different from :class:`RandomCrop`, the output
     shape may not equal to ``crop_size`` strictly. We choose a random value
     from ``ratios`` and the output shape could be larger or smaller than
     ``crop_size``. The padding operation is also different from :class:`Pad`,
     here we use around padding instead of right-bottom padding.
-
     The relation between output image (padding image) and original image:
-
     .. code:: text
-
                         output image
-
                +----------------------------+
                |          padded area       |
         +------|----------------------------|----------+
@@ -1413,9 +1423,7 @@ class RandomCenterCropPad(object):
         +------|----------------------------|----------+
                |          padded area       |
                +----------------------------+
-
     There are 5 main areas in the figure:
-
     - output image: output image of this operation, also called padding
       image in following instruction.
     - original image: input image of this operation.
@@ -1424,12 +1432,9 @@ class RandomCenterCropPad(object):
     - center range: a smaller area where random center chosen from.
       center range is computed by ``border`` and original image's shape
       to avoid our random center is too close to original image's border.
-
     Also this operation act differently in train and test mode, the summary
     pipeline is listed below.
-
     Train pipeline:
-
     1. Choose a ``random_ratio`` from ``ratios``, the shape of padding image
        will be ``random_ratio * crop_size``.
     2. Choose a ``random_center`` in center range.
@@ -1437,15 +1442,12 @@ class RandomCenterCropPad(object):
     4. Initialize the padding image with pixel value equals to ``mean``.
     5. Copy the cropped area to padding image.
     6. Refine annotations.
-
     Test pipeline:
-
     1. Compute output shape according to ``test_pad_mode``.
     2. Generate padding image with center matches the original image
        center.
     3. Initialize the padding image with pixel value equals to ``mean``.
     4. Copy the ``cropped area`` to padding image.
-
     Args:
         crop_size (tuple | None): expected size after crop, final size will
             computed according to ratio. Requires (h, w) in train mode, and
@@ -1465,7 +1467,6 @@ class RandomCenterCropPad(object):
         test_pad_mode (tuple): padding method and padding shape value, only
             available in test mode. Default is using 'logical_or' with
             127 as padding shape value.
-
             - 'logical_or': final_shape = input_shape | padding_shape_value
             - 'size_divisor': final_shape = int(
               ceil(input_shape / padding_shape_value) * padding_shape_value)
@@ -1519,13 +1520,11 @@ class RandomCenterCropPad(object):
 
     def _get_border(self, border, size):
         """Get final border for the target size.
-
         This function generates a ``final_border`` according to image's shape.
         The area between ``final_border`` and ``size - final_border`` is the
         ``center range``. We randomly choose center from the ``center range``
         to avoid our random center is too close to original image's border.
         Also ``center range`` should be larger than 0.
-
         Args:
             border (int): The initial border, default is 128.
             size (int): The width or height of original image.
@@ -1538,11 +1537,9 @@ class RandomCenterCropPad(object):
 
     def _filter_boxes(self, patch, boxes):
         """Check whether the center of each box is in the patch.
-
         Args:
             patch (list[int]): The cropped area, [left, top, right, bottom].
             boxes (numpy array, (N x 4)): Ground truth boxes.
-
         Returns:
             mask (numpy array, (N,)): Each box is inside or outside the patch.
         """
@@ -1555,18 +1552,15 @@ class RandomCenterCropPad(object):
     def _crop_image_and_paste(self, image, center, size):
         """Crop image with a given center and size, then paste the cropped
         image to a blank image with two centers align.
-
         This function is equivalent to generating a blank image with ``size``
         as its shape. Then cover it on the original image with two centers (
         the center of blank image and the random center of original image)
         aligned. The overlap area is paste from the original image and the
         outside area is filled with ``mean pixel``.
-
         Args:
             image (np array, H x W x C): Original image.
             center (list[int]): Target crop center coord.
             size (list[int]): Target crop size. [target_h, target_w]
-
         Returns:
             cropped_img (np array, target_h x target_w x C): Cropped image.
             border (np array, 4): The distance of four border of
@@ -1605,10 +1599,8 @@ class RandomCenterCropPad(object):
 
     def _train_aug(self, results):
         """Random crop and around padding the original image.
-
         Args:
             results (dict): Image infomations in the augment pipeline.
-
         Returns:
             results (dict): The updated dict.
         """
@@ -1673,12 +1665,9 @@ class RandomCenterCropPad(object):
 
     def _test_aug(self, results):
         """Around padding the original image without cropping.
-
         The padding mode and value are from ``test_pad_mode``.
-
         Args:
             results (dict): Image infomations in the augment pipeline.
-
         Returns:
             results (dict): The updated dict.
         """
@@ -1733,10 +1722,8 @@ class RandomCenterCropPad(object):
 @PIPELINES.register_module()
 class CutOut(object):
     """CutOut operation.
-
     Randomly drop some regions of image used in
     `Cutout <https://arxiv.org/abs/1708.04552>`_.
-
     Args:
         n_holes (int | tuple[int, int]): Number of regions to be dropped.
             If it is given as a list, number of holes will be randomly

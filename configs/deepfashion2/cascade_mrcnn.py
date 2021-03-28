@@ -1,4 +1,5 @@
 _base_ = '../cascade_rcnn/cascade_mask_rcnn_r50_fpn_1x_coco.py'
+
 model = dict(
     pretrained='open-mmlab://resnext101_64x4d',
     backbone=dict(

@@ -1,3 +1,15 @@
+import numpy as np
+import os
+import cv2
+import random
+import numpy as np
+import albumentations as A
+from copy import deepcopy
+from skimage.filters import gaussian
+from ..builder import PIPELINES
+from transfroms import Albu
+
+
 import mmcv
 import numpy as np
 import os
@@ -99,7 +111,6 @@ def keypoints_copy_paste(keypoints, paste_keypoints, alpha):
 
     return keypoints
 
-@PIPELINES.register_module()
 class CopyPaste(A.DualTransform):
     def __init__(
         self,
@@ -251,4 +262,108 @@ class CopyPaste(A.DualTransform):
             "pct_objects_paste",
             "max_paste_objects"
         )  
+
+@PIPELINES.register_module()
+class AlbuCopyPaste(Albu):
+    """Albumentation augmentation.
+    Adds custom transformations from Albumentations library.
+    Please, visit `https://albumentations.readthedocs.io`
+    to get more information.
+    An example of ``transforms`` is as followed:
+    .. code-block::
+        [
+            dict(
+                type='ShiftScaleRotate',
+                shift_limit=0.0625,
+                scale_limit=0.0,
+                rotate_limit=0,
+                interpolation=1,
+                p=0.5),
+            dict(
+                type='RandomBrightnessContrast',
+                brightness_limit=[0.1, 0.3],
+                contrast_limit=[0.1, 0.3],
+                p=0.2),
+            dict(type='ChannelShuffle', p=0.1),
+            dict(
+                type='OneOf',
+                transforms=[
+                    dict(type='Blur', blur_limit=3, p=1.0),
+                    dict(type='MedianBlur', blur_limit=3, p=1.0)
+                ],
+                p=0.1),
+        ]
+    Args:
+        transforms (list[dict]): A list of albu transformations
+        bbox_params (dict): Bbox_params for albumentation `Compose`
+        keymap (dict): Contains {'input key':'albumentation-style key'}
+        skip_img_without_anno (bool): Whether to skip the image if no ann left
+            after aug
+    """
+
+    def __init__(self,
+                 bbox_params=None,
+                 update_pad_shape=False,
+                 skip_img_without_anno=False):
+        if Compose is None:
+            raise RuntimeError('albumentations is not installed')
+        transforms = [dict(type='CopyPaste',
+                            blend=True,
+                            sigma=1,
+                            pct_objects_paste=0.5,
+                            p=1)]
+        keymap = {'img': 'paste_image',
+                  'gt_masks': 'paste_masks',
+                  'gt_bboxes': 'paste_bboxes'}
+        super(AlbuCopyPaste, self).__init__(transforms, keymap)
+
+        self.transforms = transforms
+        self.filter_lost_elements = False
+        self.update_pad_shape = update_pad_shape
+        self.skip_img_without_anno = skip_img_without_anno
+
+        # A simple workaround to remove masks without boxes
+        if (isinstance(bbox_params, dict) and 'label_fields' in bbox_params
+                and 'filter_lost_elements' in bbox_params):
+            self.filter_lost_elements = True
+            self.origin_label_fields = bbox_params['label_fields']
+            bbox_params['label_fields'] = ['idx_mapper']
+            del bbox_params['filter_lost_elements']
+
+        self.bbox_params = (
+            self.albu_builder(bbox_params) if bbox_params else None)
+        self.aug = Compose(self.albu_builder(self.transforms[0]),
+                           bbox_params=self.bbox_params)
+
+        self.keymap_to_albu = keymap
+        self.keymap_back = {v: k for k, v in self.keymap_to_albu.items()}
+
+    def albu_builder(self, cfg):
+        """Import a module from albumentations.
+        It inherits some of :func:`build_from_cfg` logic.
+        Args:
+            cfg (dict): Config dict. It should at least contain the key "type".
+        Returns:
+            obj: The constructed object.
+        """
+
+        assert isinstance(cfg, dict) and 'type' in cfg
+        args = cfg.copy()
+
+        obj_type = args.pop('type')
+        if mmcv.is_str(obj_type) and obj_type == "CopyPaste":
+            obj_cls = obj_type
+        else:
+            raise TypeError(
+                f'Invalid CopyPaste transformation')
+        if 'transforms' in args:
+            args['transforms'] = [
+                self.albu_builder(transform)
+                for transform in args['transforms']
+            ]
+
+        return obj_cls(**args)
+
+
+
 

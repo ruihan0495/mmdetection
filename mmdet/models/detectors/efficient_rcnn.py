@@ -1,8 +1,10 @@
 from ..builder import DETECTORS, build_backbone, build_head, build_neck
-from .two_stage import TwoStageDetector
 from inplace_abn import InPlaceABN, InPlaceABNSync
-import geffnet
 import torch.nn as nn
+from .base import BaseDetector
+import sys
+sys.path.append('./mmdet/models/backbones')
+import geffnet
 
 norm_cfg = {
     # format: layer_type: (abbreviation, module)
@@ -13,15 +15,7 @@ norm_cfg = {
     'InPlaceABNSync': ('bn',InPlaceABNSync),
     # and potentially 'SN'
 }
-'''
-neck=dict(
-        type='TWOWAYFPN',
-        in_channels=[40, 64, 176, 2048], #b0[24, 40, 112, 1280], #b4[32, 56, 160, 1792],
-        out_channels=256,
-        norm_cfg=dict(type='BN', requires_grad=True),
-        act_cfg=None,
-        num_outs=4)
-'''
+
 
 @DETECTORS.register_module()
 class EfficientRCNN(BaseDetector):
@@ -45,8 +39,6 @@ class EfficientRCNN(BaseDetector):
         else:
             self.backbone = geffnet.create_model(backbone['type'], 
                                                  pretrained=True if pretrained is not None else False,
-                                                 se=False, 
-                                                 act_layer=backbone['act_cfg']['type'],
                                                  norm_layer=norm_cfg[backbone['norm_cfg']['type']][1]) 
         if neck is not None:
             self.neck = build_neck(neck)
@@ -183,7 +175,10 @@ class EfficientRCNN(BaseDetector):
     def extract_feat(self, img):
         """Directly extract features from the backbone+neck
         """
-        x = self.backbone(img)
+        feats = self.backbone(img)
+        x = []
+        for i in range(2,7):
+          x.append(feats[i])
         x = self.neck(x)
         return x
 

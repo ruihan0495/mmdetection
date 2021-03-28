@@ -1,6 +1,7 @@
 from .builder import DATASETS, PIPELINES, build_dataloader, build_dataset
 from .cityscapes import CityscapesDataset
 from .coco import CocoDataset
+from .cococp import CocoDatasetCP
 from .custom import CustomDataset
 from .dataset_wrappers import (ClassBalancedDataset, ConcatDataset,
                                RepeatDataset)
@@ -11,7 +12,7 @@ from .utils import replace_ImageToTensor
 from .voc import VOCDataset
 from .wider_face import WIDERFaceDataset
 from .xml_style import XMLDataset
-from .deepfashion2 import DeepFashion2Dataset
+from .deepfashion2 import DeepFashion2Dataset, DeepFashion2DatasetCP
 
 __all__ = [
     'CustomDataset', 'XMLDataset', 'CocoDataset', 'DeepFashionDataset',
@@ -19,5 +20,6 @@ __all__ = [
     'LVISV1Dataset', 'GroupSampler', 'DistributedGroupSampler',
     'DistributedSampler', 'build_dataloader', 'ConcatDataset', 'RepeatDataset',
     'ClassBalancedDataset', 'WIDERFaceDataset', 'DATASETS', 'PIPELINES',
-    'build_dataset', 'replace_ImageToTensor','DeepFashion2Dataset'
+    'build_dataset', 'replace_ImageToTensor','DeepFashion2Dataset',
+    'CocoDatasetCP', 'DeepFashion2DatasetCP'
 ]
