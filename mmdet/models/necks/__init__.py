@@ -9,8 +9,9 @@ from .pafpn import PAFPN
 from .rfp import RFP
 from .yolo_neck import YOLOV3Neck
 from .two_way_fpn import TWOWAYFPN
+from .sepc import SEPC
 
 __all__ = [
     'FPN', 'BFP', 'ChannelMapper', 'HRFPN', 'NASFPN', 'FPN_CARAFE', 'PAFPN',
-    'NASFCOS_FPN', 'RFP', 'YOLOV3Neck', 'TWOWAYFPN'
+    'NASFCOS_FPN', 'RFP', 'YOLOV3Neck', 'TWOWAYFPN', 'SEPC'
 ]
