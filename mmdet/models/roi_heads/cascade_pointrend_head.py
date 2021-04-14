@@ -169,6 +169,32 @@ class CascadePointRendRoIHead(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
         return mask_results
 
 
+    def _get_fine_grained_point_feats(self, x, rois, rel_roi_points,
+                                      img_metas):
+        """Sample fine grained feats from each level feature map and
+        concatenate them together."""
+        num_imgs = len(img_metas)
+        fine_grained_feats = []
+        for idx in range(self.mask_roi_extractor.num_inputs):
+            feats = x[idx]
+            spatial_scale = 1. / float(
+                self.mask_roi_extractor.featmap_strides[idx])
+            point_feats = []
+            for batch_ind in range(num_imgs):
+                # unravel batch dim
+                feat = feats[batch_ind].unsqueeze(0)
+                inds = (rois[:, 0].long() == batch_ind)
+                if inds.any():
+                    rel_img_points = rel_roi_point_to_rel_img_point(
+                        rois[inds], rel_roi_points[inds], feat.shape[2:],
+                        spatial_scale).unsqueeze(0)
+                    point_feat = point_sample(feat, rel_img_points)
+                    point_feat = point_feat.squeeze(0).transpose(0, 1)
+                    point_feats.append(point_feat)
+            fine_grained_feats.append(torch.cat(point_feats, dim=0))
+        return torch.cat(fine_grained_feats, dim=1)
+
+
     def _mask_forward_train(self, x, sampling_results, gt_masks,
                             rcnn_train_cfg, img_metas, bbox_feats=None):
         """Run forward function and calculate loss for mask head and point head
@@ -186,7 +212,7 @@ class CascadePointRendRoIHead(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
         if mask_results['loss_mask'] is not None:
             loss_point = self._mask_point_forward_train(
                 x, sampling_results, mask_results['mask_pred'], gt_masks,
-                img_metas)
+                img_metas, rcnn_train_cfg)
             mask_results['loss_mask'].update(loss_point)
 
         return mask_results
