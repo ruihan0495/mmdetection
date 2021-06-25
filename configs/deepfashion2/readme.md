@@ -9,7 +9,7 @@ The dataset we used in this thesis is [DeepFashion2](https://github.com/switchab
             * annos/
         * deep_val/
             * validation/image/
-            * validation/annos/ \
+            * validation/annos/ 
 
 If you want to train on the subsampled data, please run \
 `python tools/sampler.py` \
