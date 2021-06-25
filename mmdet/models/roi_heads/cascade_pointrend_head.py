@@ -771,16 +771,16 @@ class CascadePointRendRoIHead(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
         return mask_results
 
 
-    def _get_fine_grained_point_feats(self, x, rois, rel_roi_points,
+    def _get_fine_grained_point_feats(self, stage, x, rois, rel_roi_points,
                                       img_metas):
         """Sample fine grained feats from each level feature map and
         concatenate them together."""
         num_imgs = len(img_metas)
         fine_grained_feats = []
-        for idx in range(self.mask_roi_extractor.num_inputs):
+        for idx in range(self.mask_roi_extractor[stage].num_inputs):
             feats = x[idx]
             spatial_scale = 1. / float(
-                self.mask_roi_extractor.featmap_strides[idx])
+                self.mask_roi_extractor[stage].featmap_strides[idx])
             point_feats = []
             for batch_ind in range(num_imgs):
                 # unravel batch dim
@@ -829,7 +829,7 @@ class CascadePointRendRoIHead(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
         rois = bbox2roi([res.pos_bboxes for res in sampling_results])
 
         fine_grained_point_feats = self._get_fine_grained_point_feats(
-            x, rois, rel_roi_points, img_metas)
+            stage, x, rois, rel_roi_points, img_metas)
         coarse_point_feats = point_sample(mask_pred, rel_roi_points)
         mask_point_pred = self.point_head[stage](fine_grained_point_feats,
                                           coarse_point_feats)
@@ -864,7 +864,7 @@ class CascadePointRendRoIHead(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
                 self.point_head[stage].get_roi_rel_points_test(
                     refined_mask_pred, label_pred, cfg=self.test_cfg)
             fine_grained_point_feats = self._get_fine_grained_point_feats(
-                x, rois, rel_roi_points, img_metas)
+                stage, x, rois, rel_roi_points, img_metas)
             coarse_point_feats = point_sample(mask_pred, rel_roi_points)
             mask_point_pred = self.point_head[stage](fine_grained_point_feats,
                                               coarse_point_feats)

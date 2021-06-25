@@ -1,7 +1,25 @@
-_base_ = '../hrnet/cascade_mask_rcnn_hrnetv2p_w40_20e_coco.py'
-
+_base_ = '../cascade_rcnn/cascade_mask_rcnn_r50_fpn_1x_coco.py'
 model = dict(
-    roi_head = dict(
+    pretrained='open-mmlab://resnext101_64x4d',
+    backbone=dict(
+        type='ResNeXt',
+        depth=101,
+        groups=64,
+        base_width=4,
+        num_stages=4,
+        out_indices=(0, 1, 2, 3),
+        frozen_stages=1,
+        norm_cfg=dict(type='BN', requires_grad=True),
+        style='pytorch'),
+    roi_head=dict(
+        type='CascadeRoIHead',
+        num_stages=3,
+        stage_loss_weights=[1, 0.5, 0.25],
+        bbox_roi_extractor=dict(
+            type='SingleRoIExtractor',
+            roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
+            out_channels=256,
+            featmap_strides=[4, 8, 16, 32]),
         bbox_head=[
             dict(
                 type='Shared2FCBBoxHead',
@@ -54,19 +72,35 @@ model = dict(
                     loss_weight=1.0),
                 loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0))
         ],
-        mask_head = dict(num_classes=13)
-    )
-)
+        mask_roi_extractor=dict(
+            type='SingleRoIExtractor',
+            roi_layer=dict(type='RoIAlign', output_size=14, sampling_ratio=0),
+            out_channels=256,
+            featmap_strides=[4, 8, 16, 32]),
+        mask_head=dict(
+            type='FCNMaskHead',
+            num_convs=4,
+            in_channels=256,
+            conv_out_channels=256,
+            num_classes=13,
+            loss_mask=dict(
+                type='CrossEntropyLoss', use_mask=True, loss_weight=1.0))))
+
 
 dataset_type = 'DeepFashion2Dataset'
 data_root = 'data/DeepFashion2/'
+
+# optimizer
+optimizer = dict(type='SGD', lr=0.002, momentum=0.9, weight_decay=0.0001)
+optimizer_config = dict(grad_clip=None)
+
 data = dict(
-    imgs_per_gpu=2,
-    workers_per_gpu=1,
+    samples_per_gpu=1,
+    workers_per_gpu=2,
     train=dict(
         type=dataset_type,
-        ann_file='sample_train/deepfashion2.json',
-        img_prefix='sample_train/image/',
+        ann_file='train/deepfashion2.json',
+        img_prefix='train/image/',
         data_root=data_root),
     val=dict(
         type=dataset_type,
@@ -78,5 +112,17 @@ data = dict(
         ann_file='sample_val/deepfashion2.json',
         img_prefix='sample_val/image/',
         data_root=data_root))
-evaluation = dict(interval=5, metric=['bbox', 'segm']) 
-load_from = 'http://download.openmmlab.com/mmdetection/v2.0/hrnet/htc_hrnetv2p_w40_20e_coco/htc_hrnetv2p_w40_20e_coco_20200529_183411-417c4d5b.pth'
+total_epochs = 12
+evaluation = dict(interval=6, metric=['bbox', 'segm'])
+checkpoint_config = dict(interval=1)
+log_config = dict(
+    interval=200,
+    hooks=[
+        dict(type='TextLoggerHook'),
+        # dict(type='TensorboardLoggerHook')
+    ])
+work_dir = './work_dirs/resnext'
+load_from = None
+resume_from = None
+#resume_from = 'work_dirs/cascade_mrcnn/epoch_16.pth'
+#load_from = 'http://download.openmmlab.com/mmdetection/v2.0/cascade_rcnn/cascade_mask_rcnn_x101_64x4d_fpn_1x_coco/cascade_mask_rcnn_x101_64x4d_fpn_1x_coco_20200203-9a2db89d.pth'

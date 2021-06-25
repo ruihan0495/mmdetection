@@ -12,11 +12,9 @@ class EfficientNet(nn.Module):
     Args:
         model_name (string): tf_efficientnet_b0-b7.
         pretrained (bool) : load pretrained weights, must be True.
-        out_indices (Sequence[int]): Output from which stages. Should be (2, 3, 4, 5, 6) in EfficientDet.
-        style (str): `pytorch` or `caffe`. If set to "pytorch", the stride-two
-            layer is the 3x3 conv layer, otherwise the stride-two layer is
-            the first 1x1 conv layer. Not used.
-        frozen_stages (int): Stages to be frozen (stop grad and set eval mode).
+        out_indices (Sequence[int]): Output from which stages. Should be (2, 3, 4, 5, 6)。
+        style (str): Not used. default set to 'pytorch'.
+        frozen_stages (int): 1 means freeze all parameters (stop grad and set eval mode).
             -1 means not freezing any parameters.
     Example:
         >>> from mmdet.models import EfficientNet
