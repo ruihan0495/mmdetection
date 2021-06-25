@@ -24,12 +24,10 @@ def sampler(image_dir, anno_dir, ratio, save_img_dir, save_anno_dir):
     total_files = len(image_files)
     assert len(image_files) == len(anno_files), "Annotations and images don't match!"
     sample_num_files = math.ceil(ratio * len(image_files))
-
     sampled_image_files = np.random.choice(image_files, sample_num_files)
     sampled_image_prefix = [sampled_image_file.split('.')[0] for sampled_image_file in sampled_image_files]
     sampled_anno_files = [image_prefix + '.json' for image_prefix in sampled_image_prefix]
-
-    '''annotation file and image file name don't match exactly in this way...'''
+    
     #sampled_file_index = np.random.choice(total_files, sample_num_files)
     #sampled_image_files = np.array(image_files)[sampled_file_index]
     #sampled_anno_files = np.array(anno_files)[sampled_file_index]
@@ -49,10 +47,21 @@ def sampler(image_dir, anno_dir, ratio, save_img_dir, save_anno_dir):
         f_path = os.path.join(anno_dir, f)
         shutil.copy(f_path, save_anno_dir) 
 
+
+def test_sample(image_dir, anno_dir, ratio):
+    image_files = os.listdir(image_dir)
+    anno_files = os.listdir(anno_dir)
+    assert len(image_files) == len(anno_files), "Annotations and images don't match!"
+    total_files = len(image_files)
+    sample_num_files = math.ceil(ratio * len(image_files))
+    print("totoal files {}, totoal sampled files {}".format(total_files, sample_num_files))
+
+
 if __name__ == "__main__":
-    image_dir =  'data/test_fashion_data/image'
-    anno_dir = 'data/test_fashion_data/anno'
+    image_dir =  train_image_dir
+    anno_dir = train_anno_dir
     ratio = 0.1
-    save_img_dir = 'data/test_fashion_data/sample_image'
-    save_anno_dir =  'data/test_fashion_data/sample_anno'
-    sampler(image_dir, anno_dir, ratio, save_img_dir, save_anno_dir)     
+    save_img_dir = train_save_image_dir
+    save_anno_dir =  train_save_anno_dir
+    sampler(image_dir, anno_dir, ratio, save_img_dir, save_anno_dir)  
+    #test_sample(image_dir, anno_dir, ratio)     
