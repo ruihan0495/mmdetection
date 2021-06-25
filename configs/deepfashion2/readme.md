@@ -10,6 +10,7 @@ The dataset we used in this thesis is [DeepFashion2](https://github.com/switchab
         * deep_val/
             * validation/image/
             * validation/annos/ \
+
 If you want to train on the subsampled data, please run \
 `python tools/sampler.py` \
 and it will automatically generate the sampled train and validation dataset under `data/DeepFashion2/sample_train` or, with some modifications,  `data/DeepFashion2/sample_val`. Finally, to generate Coco-stype annotations, please check [here](https://github.com/switchablenorms/DeepFashion2/blob/master/evaluation/deepfashion2_to_coco.py) for how to do it.
