@@ -79,7 +79,7 @@ model=dict(
             loss_mask=dict(
                 type='CrossEntropyLoss', use_mask=True, loss_weight=1.0))))
 # runtime settings
-total_epochs = 5
+total_epochs = 12
 
 # dataset settings
 dataset_type = 'DeepFashion2Dataset'
@@ -134,4 +134,5 @@ data = dict(
         data_root=data_root))
 evaluation = dict(interval=5, metric=['bbox', 'segm'])
 resume_from = None
-load_from = "http://download.openmmlab.com/mmdetection/v2.0/detectors/detectors_cascade_rcnn_r50_1x_coco/detectors_cascade_rcnn_r50_1x_coco-32a10ba0.pth"
+load_from = None
+#load_from = "http://download.openmmlab.com/mmdetection/v2.0/detectors/detectors_cascade_rcnn_r50_1x_coco/detectors_cascade_rcnn_r50_1x_coco-32a10ba0.pth"

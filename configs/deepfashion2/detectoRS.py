@@ -167,6 +167,6 @@ log_config = dict(
         dict(type='TextLoggerHook'),
         # dict(type='TensorboardLoggerHook')
     ])
-work_dir = './work_dirs/detectoRS2'
+work_dir = './work_dirs/detectoRS'
 resume_from = None
 load_from = None

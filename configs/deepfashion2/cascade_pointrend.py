@@ -198,7 +198,7 @@ data = dict(
         ann_file='deep_val/validation/deepfashion2.json',
         img_prefix='deep_val/validation/image/',
         data_root=data_root))
-total_epochs = 9
+total_epochs = 12
 checkpoint_config = dict(interval=1)
 work_dir = './work_dirs/cascade_pointrend'
 resume_from = None
